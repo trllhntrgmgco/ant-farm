@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Ant Farm Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+        #farm {
+            width: 800px;
+            height: 600px;
+            border: 5px solid #8B4513;
+            margin: 20px auto;
+            position: relative;
+            background-color: #D2B48C;
+            overflow: hidden;
+        }
+        .tunnel {
+            position: absolute;
+            background-color: #8B4513;
+        }
+        .ant {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: black;
+            border-radius: 50%;
+            transition: all 0.5s ease;
+        }
+        .food {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: green;
+            border-radius: 50%;
+        }
+        #controls {
+            margin: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 0 10px;
+        }
+        #score {
+            font-size: 24px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Ant Farm Simulation</h1>
+    <p>Click "Dig Tunnel" to create random tunnels. Click "Add Food" to place food particles. Ants will move randomly within the farm.</p>
+    <div id="score">Collected Food: <span id="collected">0</span></div>
+    <div id="farm"></div>
+    <div id="controls">
+        <button onclick="digTunnel()">Dig Tunnel</button>
+        <button onclick="addFood()">Add Food</button>
+        <button onclick="addAnt()">Add Ant</button>
+    </div>
+
+    <script>
+        const farm = document.getElementById('farm');
+        let ants = [];
+        let foods = [];
+        let collected = 0;
+
+        class Ant {
+            constructor() {
+                this.x = Math.random() * 780 + 10;
+                this.y = Math.random() * 580 + 10;
+                this.dx = (Math.random() - 0.5) * 4;
+                this.dy = (Math.random() - 0.5) * 4;
+                this.element = document.createElement('div');
+                this.element.className = 'ant';
+                this.element.style.left = this.x + 'px';
+                this.element.style.top = this.y + 'px';
+                farm.appendChild(this.element);
+                this.hasFood = false;
+            }
+
+            move() {
+                this.x += this.dx;
+                this.y += this.dy;
+
+                // Bounce off walls
+                if (this.x < 0 || this.x > 790) {
+                    this.dx = -this.dx;
+                    this.x = Math.max(0, Math.min(790, this.x));
+                }
+                if (this.y < 0 || this.y > 590) {
+                    this.dy = -this.dy;
+                    this.y = Math.max(0, Math.min(590, this.y));
+                }
+
+                this.element.style.left = this.x + 'px';
+                this.element.style.top = this.y + 'px';
+
+                // Check for food
+                foods = foods.filter(food => {
+                    const dist = Math.hypot(this.x - food.x, this.y - food.y);
+                    if (dist < 15) {
+                        if (!this.hasFood) {
+                            this.hasFood = true;
+                            this.element.style.backgroundColor = 'red'; // Carrying food
+                            farm.removeChild(food.element);
+                            collected++;
+                            document.getElementById('collected').textContent = collected;
+                        }
+                        return false;
+                    }
+                    return true;
+                });
+            }
+        }
+
+        function digTunnel() {
+            const tunnel = document.createElement('div');
+            tunnel.className = 'tunnel';
+            const width = Math.random() * 100 + 50;
+            const height = Math.random() * 100 + 50;
+            tunnel.style.width = width + 'px';
+            tunnel.style.height = height + 'px';
+            tunnel.style.left = Math.random() * (800 - width) + 'px';
+            tunnel.style.top = Math.random() * (600 - height) + 'px';
+            tunnel.style.borderRadius = '20px';
+            farm.appendChild(tunnel);
+        }
+
+        function addFood() {
+            const food = {
+                x: Math.random() * 780 + 10,
+                y: Math.random() * 580 + 10,
+                element: document.createElement('div')
+            };
+            food.element.className = 'food';
+            food.element.style.left = food.x + 'px';
+            food.element.style.top = food.y + 'px';
+            farm.appendChild(food.element);
+            foods.push(food);
+        }
+
+        function addAnt() {
+            const ant = new Ant();
+            ants.push(ant);
+        }
+
+        // Initial setup
+        for (let i = 0; i < 5; i++) {
+            addAnt();
+            digTunnel();
+        }
+        for (let i = 0; i < 10; i++) {
+            addFood();
+        }
+
+        // Animation loop
+        setInterval(() => {
+            ants.forEach(ant => ant.move());
+        }, 100);
+    </script>
+</body>
+</html>
